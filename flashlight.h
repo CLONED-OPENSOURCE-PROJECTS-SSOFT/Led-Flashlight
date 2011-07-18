@@ -1,21 +1,48 @@
-#define INDICATE 4
+#ifndef FLASHLIGHT_H_
+#define FLASHLIGHT_H_
+
 #define OFF	0
-#define SHUTDOWN_DELAY 750
-#define WAKE_DELAY 750
-#define MAX_BRIGHTNESS 7
-#define LOW_AV_BR 3
-#define HIGH_AV_BR 5
-#define TIMER1_PREDIVISOR_1024 0x05
-#define TIMER1_PREDIVISOR_256 0x04
-#define TIMER1_PREDIVISOR_64 0x03
-#define TIMER1_PREDIVISOR_8 0x02
-#define TIMER1_PREDIVISOR_1 0x01
-#define TIMER1_OFF 0x00
-#define SHUTDOWN_LATCH 750
+#define MAX_BRIGHTNESS 6
 
-char start_timer1_ctc(unsigned int value);
+#define ADMUX_ADC0 0x00
+#define ADMUX_ADC1 0x01
+#define ADMUX_ADC2 0x02
+#define ADMUX_ADC3 0x03
+#define ADMUX_ADC4 0x04
+#define ADMUX_ADC5 0x05
+#define ADMUX_ADC6 0x06
+#define ADMUX_ADC7 0x07
+#define ADMUX_ADC8 0x08
+#define ADMUX_ADC9 0x09
+#define ADMUX_ADC10 0x0A
 
-void init_mpu(void);
+/* LED PART */
+#define PORTLED PORTA
 
-void set_brightness(unsigned short mode);
-void indicator(unsigned int adc);
+typedef enum {
+	BOARD_LED_gm = 0x0C,
+	BOARD_LED_RED = 0x08,
+	BOARD_LED_GREEN = 0x04,
+    BOARD_LED_ORANGE = 0x0C,
+	BOARD_LED_NONE = 0x00,
+} Board_LED_Color_t;
+/*
+typedef enum {
+	BUTTON_LED_gm = 0x0C,
+	BUTTON_LED_RED = 0x08,
+	BUTTON_LED_GREEN = 0x04,
+	BUTTON_LED_ORANGE = 0x0C,
+	BUTTON_LED_NONE = 0x00,
+} Button_LED_Color_t;
+*/
+
+void LED_setNone(void);
+void LED_toggleOrange(void);
+void LED_toggleGreen(void);
+void LED_toggleRed(void);
+
+void ADC_enable(unsigned char admux);
+
+void Brightness_set(uint8_t mode);
+
+#endif /* FLASHLIGHT_H_ */
