@@ -2,15 +2,6 @@
 #include "flashlight.h"
 #include "scheduler.h"
 
-inline void ADC_enable(unsigned char admux)
-{
-	ADCSRA|=(1<<ADEN);//enable ADC
-	ADCSRA|=(1<<ADIE);//enable interrupts from ADC
-	ADMUX=admux;
-	_delay_ms(1);
-	ADCSRA|=(1<<ADSC);//start conversion in BACKGROUND mode
-}
-
 void Brightness_set (uint8_t mode)
 {
 	uint8_t pwm=0;
@@ -18,22 +9,26 @@ void Brightness_set (uint8_t mode)
 	{
 		case 0:
 			pwm = 0;
-			PORTB&=~(1<<PB0);//!SHDN enable the device
 			TCCR0A&=~(1<<WGM00)|(1<<WGM01);//Stop PWM to save power
+			TCCR0A&=~(1<<COM0B1)|(1<<COM0B0);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF
+			TCCR0B&=~(1<<CS01);//prescaler for high frequency
+
+			PORTA|=(1<<PA7);
 			break;
-		case 1: pwm = 10; break;
-		case 2: pwm = 15; break;
-		case 3: pwm = 31; break;
-		case 4: pwm = 63; break;
-		case 5: pwm = 127; break;
+		case 1: pwm = 8; break;
+		case 2: pwm = 16; break;
+		case 3: pwm = 32; break;
+		case 4: pwm = 64; break;
+		case 5: pwm = 128; break;
 		case 6: pwm = 255; break;
 		default: pwm = 0;
 	}
 	if (pwm!=0)
 	{
+		TCCR0A|=(1<<COM0B1)|(1<<COM0B0);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF
+		TCCR0B|=(1<<CS01);// prescaler for high frequency
 		OCR0B = pwm;//Set mode
 		TCCR0A|=(1<<WGM00)|(1<<WGM01);//Start PWM Timer
-		PORTB|=(1<<PB0);//!SHDN enable the device and mosfetS
 	}
 }
 

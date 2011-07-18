@@ -2,7 +2,6 @@
 #include "scheduler.h"
 #include "tasks.h"
 #include "flashlight.h"
-#include "ADC.h"
 
 ISR(TIM1_COMPA_vect)
 {
@@ -13,10 +12,7 @@ int main(void)
 {
 	initScheduler();
 	initPorts();
-
 	Task_create(ButtonCheckerTask,0,NOT_FROM_ISR);//Create task and execute immediately (time =0)
-	//createTask(ADC_checkTemperatureTask,0,NOT_FROM_ISR);//
-	//createTask(ADC_checkBatteryTask,0,NOT_FROM_ISR);//
 	Task_create(StateMachineTask,0,NOT_FROM_ISR);
 
 
