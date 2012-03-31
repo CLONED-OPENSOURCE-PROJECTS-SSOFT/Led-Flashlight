@@ -12,6 +12,6 @@
 #define SLEEP 1
 #define BACKGROUND 2
 #define WAIT 3
-extern int adc[];
+extern unsigned int adc[];
 void adc_enable(unsigned char admux,char mode);
 void adc_disable(void);

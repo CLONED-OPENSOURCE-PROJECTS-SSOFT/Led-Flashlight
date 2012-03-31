@@ -9,15 +9,15 @@
 //------------GLOBALS---------------------------
 short mode=0;//this global used as index of power array
 volatile unsigned short status=INDICATE;
-int counter[]={0,0};
+int counter;
 unsigned int button[]={0,0};//time counters
 //----------------------------------------------
 ISR(TIM1_COMPA_vect)
 {	
 	
-	if(counter[0]++==1000)//every 1 second 
+	if(counter++==1000)//every 1 second 
 		{
-			counter[0]=0;//resart timer
+			counter=0;//resart timer
 			adc_enable(ADMUX_ADC2,BACKGROUND);//check battary
 			//status|=INDICATE;
 		}
@@ -62,13 +62,14 @@ ISR(TIM1_COMPA_vect)
 int main(void)
 {
 	init_mpu();
+
 	sei();
 	set_sleep_mode(SLEEP_MODE_IDLE);
-	adc_enable(ADMUX_ADC2,SLEEP);
+	adc_enable(ADMUX_ADC1,SLEEP);
 	start_timer1_ctc(FREQUENCY,1000);
 	for(;;) 
 	{
-		if (status==INDICATE) {indicator(adc[ADMUX_ADC2]);status&=~INDICATE;}//indicate
+		if (status==INDICATE) {indicator(adc[ADMUX_ADC1]);status&=~INDICATE;}//indicate
         sleep_enable();
         sleep_cpu();
         sleep_disable();

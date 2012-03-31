@@ -13,4 +13,4 @@ void start_timer1_ctc(char mode,unsigned int value);
 void init_mpu(void);
 
 void set_brightness(unsigned short mode);
-void indicator(unsigned short adc);
+void indicator(unsigned int adc);

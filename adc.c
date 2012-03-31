@@ -4,7 +4,7 @@
 #include <avr/sleep.h>
 #include "adc.h"
 
-int adc[]={0,0,0,0};//in adc.c
+unsigned int adc[]={0,0,0,0,0,0,0,0};//in adc.c
 
 ISR(ADC_vect)
 {

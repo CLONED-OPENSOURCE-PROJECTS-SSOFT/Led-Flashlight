@@ -8,33 +8,38 @@
 #include <util/delay.h>
 #include "routines.h"
 #include "led.h"
-void indicator(unsigned short adc)
+void indicator(unsigned int adc)
 {
-	adc/=28;
-	if (adc<=9) blink(RED, PULSE);//no power!
-	else if (adc<=10) blink(RED, SHORT);//running out
-	else if (adc<=12) blink(ORANGE, SHORT);//half
-	else if (adc<=14) blink(GREEN, SHORT);//enough
-	else if (adc<=30) blink(GREEN, LONG);// more than enough
-	else if (adc>30) blink(RED, GLOW);//overpower
+	if (adc<=2*57) blink(RED, SHORT);//running out
+	else if (adc<=4*57) blink(ORANGE, SHORT);//half
+		else if (adc<=6*57) blink(GREEN, SHORT);//enough
+			else if (adc>8*57) blink(GREEN, LONG);// more than enough
 }
 void set_brightness(unsigned short mode)
 {
-	char pwm [] = {255,251, 247,239,223,195,127,0};
-				// 0 1  2  3  4  5  6  7
-	OCR0B = pwm[mode];
+	char pwm [] = {0, 7, 8,16,32,64,128,255};
+				// 1  2  3  4  5  6  7
+
+	if (mode==0) PORTB&=~(1<<PB0);//!SHDN enable the device
+	else
+	{	
+		OCR0B = pwm[mode];
+		PORTB|=(1<<PB0);//!SHDN enable the device
+	}
 }
 void init_mpu(void)
 {
-	DDRA|=(1<<PA7);//MCE
-	PORTA|=(1<<PA7);//PB3 mce
-	DDRA|=(1<<PA1)|(1<<PA5);// LEDs
+	DDRB|=(1<<PB0);//!SHDN
+	
+	DDRA|=(1<<PA7);//ctrl output
+	
+	DDRA|=(1<<PA2)|(1<<PA3);// LEDs
 	PORTB|=(1<<PB2);//button0 pullup
 	PORTA|=(1<<PA0);//button1 pullup
 //power saving
-	DIDR0&=0x00;
+	DIDR0&=0x01;//voltage adc pin
 //start PWM	
-	TCCR0A|=(1<<COM0B1);//OC0B non-inverting mode OCR0B = 0xFF goes for continious high, which means off
+	TCCR0A|=(1<<COM0B1);//OC0B non-inverting mode OCR0B = 0xFF goes for continious high, which means ON
 	TCCR0A|=(1<<WGM00)|(1<<WGM01);//PWM with top = 0xFF
 	TCCR0B|=(1<<CS00);//no prescaler for high frequency
 	set_brightness(0);

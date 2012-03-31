@@ -11,5 +11,5 @@ void led (uint8_t);
 
 #define PORTGREEN PORTA 
 #define PORTRED PORTA 
-#define PGREEN PA1 
-#define PRED PA5
+#define PGREEN PA2 
+#define PRED PA3
