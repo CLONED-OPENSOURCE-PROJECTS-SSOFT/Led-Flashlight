@@ -1,14 +1,16 @@
+#define TIMER1_PREDIVISOR_1024 0x05
+#define TIMER1_PREDIVISOR_256 0x04
+#define TIMER1_PREDIVISOR_64 0x03
+#define TIMER1_PREDIVISOR_8 0x02
+#define TIMER1_PREDIVISOR_1 0x01
+#define TIMER1_OFF 0x00
 
-#define STOP 0x00
-#define CK 0x01
-#define CK8 0x02
-#define CK64 0x03
-#define CK256 0x04
-#define CK1024 0x05
-#define EXTERNAL_PIN_T0_FALLING_EDGE 0x06
-#define EXTERNAL_PIN_T0_RISING_EDGE 0x07
+#define PERIOD 0
+#define FREQUENCY 1
+void start_timer1_ctc(char mode,unsigned int value);
+
 #define SHUTDOWN_LATCH 750
 void init_mpu(void);
-void start_timer0(int frequency);
-void start_timer1_pwm(unsigned short pwm);
-void timer0_ovf_corrector(void);
+
+void set_brightness(unsigned short mode);
+void indicator(unsigned short adc);

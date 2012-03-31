@@ -8,7 +8,8 @@ void led (uint8_t);
 #define LONG 2
 #define PULSE 3
 #define GLOW 4
+
 #define PORTGREEN PORTA 
 #define PORTRED PORTA 
 #define PGREEN PA1 
-#define PRED PA2 
+#define PRED PA5

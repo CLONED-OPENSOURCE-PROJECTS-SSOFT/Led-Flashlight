@@ -9,5 +9,9 @@
 #define ADMUX_ADC8 0x08
 #define ADMUX_ADC9 0x09
 #define ADMUX_ADC10 0x0A
-void adc_enable(short admux);//admux
+#define SLEEP 1
+#define BACKGROUND 2
+#define WAIT 3
+extern int adc[];
+void adc_enable(unsigned char admux,char mode);
 void adc_disable(void);

@@ -7,38 +7,76 @@
 #include <stdlib.h>
 #include <util/delay.h>
 #include "routines.h"
-//----GLOBALS-----------
-unsigned short tcnt0_bottom;
-//----GLOBALS-----------
-
-void start_timer1_pwm(unsigned short pwm)
+#include "led.h"
+void indicator(unsigned short adc)
 {
-	TCCR1A|=0x31;//pb3 mode and pwm
-	TCCR1B=0x05;//see table in datasheet
-	OCR1C=199;
-	OCR1B = pwm;
+	adc/=28;
+	if (adc<=9) blink(RED, PULSE);//no power!
+	else if (adc<=10) blink(RED, SHORT);//running out
+	else if (adc<=12) blink(ORANGE, SHORT);//half
+	else if (adc<=14) blink(GREEN, SHORT);//enough
+	else if (adc<=30) blink(GREEN, LONG);// more than enough
+	else if (adc>30) blink(RED, GLOW);//overpower
+}
+void set_brightness(unsigned short mode)
+{
+	char pwm [] = {255,251, 247,239,223,195,127,0};
+				// 0 1  2  3  4  5  6  7
+	OCR0B = pwm[mode];
 }
 void init_mpu(void)
 {
-	DDRB|=(1<<PB3);//MCE
-	PORTB|=(1<<PB3);//PB3 mce
-	DDRA|=0x06;//GR LED
-	PORTB|=(1<<PB6);//button0 pullup
-	PORTA|=(1<<PA3);//button1 pullup
-	PORTA|=(1<<PA4);//button2 pullup
+	DDRA|=(1<<PA7);//MCE
+	PORTA|=(1<<PA7);//PB3 mce
+	DDRA|=(1<<PA1)|(1<<PA5);// LEDs
+	PORTB|=(1<<PB2);//button0 pullup
+	PORTA|=(1<<PA0);//button1 pullup
+//power saving
+	DIDR0&=0x00;
+//start PWM	
+	TCCR0A|=(1<<COM0B1);//OC0B non-inverting mode OCR0B = 0xFF goes for continious high, which means off
+	TCCR0A|=(1<<WGM00)|(1<<WGM01);//PWM with top = 0xFF
+	TCCR0B|=(1<<CS00);//no prescaler for high frequency
+	set_brightness(0);
 }
-void start_timer0(int frequency)
-{	//returns bottom value for TCNT0
-	TCNT0 = 0;
-	TIMSK|=(1<<TOIE0);
-	uint16_t tacts=F_CPU/frequency;
-	if (tacts<255){TCCR0=CK; tcnt0_bottom=255-tacts;return;}
-	if (tacts/8<255){TCCR0=CK8; tcnt0_bottom=255-tacts/8;return;}
-	if (tacts/64<255){TCCR0=CK64; tcnt0_bottom=255-tacts/64;return;}
-	if (tacts/256<255){TCCR0=CK256; tcnt0_bottom=255-tacts/256;return;}
-	if (tacts/1024<255){TCCR0=CK1024; tcnt0_bottom=255-tacts/1024;return;}
-}
-void timer0_ovf_corrector(void)
+void start_timer1_ctc(char mode,unsigned int value)
 {
-	TCNT0=tcnt0_bottom;
+	TCCR1A&=0x00;//stop counter, clear all control bits
+	TCCR1B&=0x00;//stop counter, clear all control bits
+	TCNT1 = 0x0000;//clear counter
+	TCCR1B|=(1<<WGM12);//CTC mode clear on compare
+	TIMSK1 |= (1<<OCIE1A);//enable compa_vect
+	unsigned long tacts;
+	if (mode==PERIOD) tacts=(F_CPU/1000)*value; else tacts=F_CPU/value;
+	if (tacts<0xFFFF) 
+	{
+		OCR1A=tacts;
+		TCCR1B|=TIMER1_PREDIVISOR_1;
+		return;
+	}
+	if (tacts/8<0xFFFF) 
+	{
+		OCR1A=tacts/8;
+		TCCR1B|=TIMER1_PREDIVISOR_8;
+		return;
+	}
+	if (tacts/64<0xFFFF) 
+	{
+		OCR1A=tacts/64;
+		TCCR1B|=TIMER1_PREDIVISOR_64;
+		return;
+	}
+	if (tacts/256<0xFFFF) 
+	{
+		OCR1A=tacts/256;
+		TCCR1B|=TIMER1_PREDIVISOR_256;
+		return;
+	}
+	if (tacts/1024<0xFFFF) 
+	{
+		OCR1A=tacts/1024;
+		TCCR1B|=TIMER1_PREDIVISOR_1024;
+		return;
+	}
 }
+
