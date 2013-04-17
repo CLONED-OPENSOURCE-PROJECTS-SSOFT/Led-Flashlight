@@ -1,5 +1,4 @@
-#include <avr/io.h>
-#include <util/delay.h>
+#include "avr_compiler.h"
 #include "led.h"
 
 void led(uint8_t color)
@@ -28,52 +27,38 @@ void led(uint8_t color)
 
 void blink (uint8_t color,uint8_t type)
 {
-	uint8_t i,j;
 	switch (type)
 	{
 		case SHORT:
-		led(color);
-		_delay_ms(50);
-		led(NONE);
-		_delay_ms(50);
-		led(color);
-		_delay_ms(100);
-		led(NONE);
-		break;
-    case LONG:
-		led(color);
-		_delay_ms(150);
-		led(NONE);
-		_delay_ms(150);
-		led(color);
-		_delay_ms(150);
-		led(NONE);
-		break;
-  	case PULSE:
-		for (i=0;i<=5;i++)
-		{
 			led(color);
 			_delay_ms(50);
 			led(NONE);
 			_delay_ms(50);
-		}
+			led(color);
+			_delay_ms(100);
+			led(NONE);
 		break;
-
-		case GLOW:
-		for (i=1;i<=5;i++)
-			for(j=1;j<=3;j++)
+  		case LONG:
+			led(color);
+			_delay_ms(150);
+			led(NONE);
+			_delay_ms(150);
+			led(color);
+			_delay_ms(150);
+			led(NONE);
+		break;
+  		case PULSE:
+			for (uint8_t i=0;i<=5;i++)
 			{
-				led(j);
+				led(color);
+				_delay_ms(50);
+				led(NONE);
 				_delay_ms(50);
 			}
-		led(color);
-		_delay_ms(500);
-		led(NONE);
 		break;
-
 		default:  //none delayed
-		led(NONE);
-		_delay_ms(200);
+			led(NONE);
+			_delay_ms(200);
 		break;
 	}//end switch
 }
