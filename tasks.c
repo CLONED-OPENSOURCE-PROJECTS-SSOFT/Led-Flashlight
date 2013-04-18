@@ -15,25 +15,25 @@ Button_struct_t ButtonPlus, ButtonMinus;
 /* Define tasks here. */
 inline void initPorts()
 {
-		DDRB|=(1<<PB0);//!SHDN
+		DDRA|=(1<<PA1);//!SHDN
 		DDRA|=(1<<PA7);//ctrl output
-		DDRA|=BOARD_LED_gm;// LEDs
+		DDRB|=BOARD_LED_gm;// LEDs
 		LED_setNone();
 
 		DIDR0&=0x01;//voltage adc pin
 
-		PORTB|=(1<<PB2);//button0 pullup
-		PORTA|=(1<<PA0);//button1 pullup
+		PORTA|=(1<<PA4);//button0 pullup
+		PORTA|=(1<<PA2);//button1 pullup
 
 		ButtonPlus.Counter=0;
 		ButtonPlus.CurrentState=FREE;
 		ButtonPlus.Port=&PINA;//
-		ButtonPlus.Mask=0x01;//PA0
+		ButtonPlus.Mask=(1<<PA2);
 
 		ButtonMinus.Counter=0;
 		ButtonMinus.CurrentState=FREE;
-		ButtonMinus.Port=&PINB;
-		ButtonMinus.Mask=0x04;//PB2
+		ButtonMinus.Port=&PINA;
+		ButtonMinus.Mask=(1<<PA4);
 
 	//start PWM
 		TCCR0A|=(1<<COM0B1);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF

@@ -18,7 +18,7 @@ void Brightness_set (uint8_t mode)
 	{
 		case 0:
 			pwm = 0;
-			PORTB&=~(1<<PB0);//!SHDN enable the device
+			PORTA&=~(1<<PA1);//!SHDN enable the device
 			TCCR0A&=~(1<<WGM00)|(1<<WGM01);//Stop PWM to save power
 			break;
 		case 1: pwm = 10; break;
@@ -33,11 +33,14 @@ void Brightness_set (uint8_t mode)
 	{
 		OCR0B = pwm;//Set mode
 		TCCR0A|=(1<<WGM00)|(1<<WGM01);//Start PWM Timer
-		PORTB|=(1<<PB0);//!SHDN enable the device and mosfetS
+		PORTA|=(1<<PA1);//!SHDN enable the device and mosfetS
 	}
 }
 
-inline void LED_setNone(void){PORTLED&=~BOARD_LED_gm;}
+inline void LED_setNone(void){
+	PORTLED&=~BOARD_LED_gm;
+	PORTLED|=BOARD_LED_NONE;
+}
 inline void LED_toggleOrange(void){PORTLED^=BOARD_LED_ORANGE;}
 inline void LED_toggleGreen(void){PORTLED^=BOARD_LED_GREEN;}
 inline void LED_toggleRed(void){PORTLED^=BOARD_LED_RED;}

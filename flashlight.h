@@ -17,14 +17,14 @@
 #define ADMUX_ADC10 0x0A
 
 /* LED PART */
-#define PORTLED PORTA
+#define PORTLED PORTB
 
 typedef enum {
-	BOARD_LED_gm = 0x0C,
-	BOARD_LED_RED = 0x08,
-	BOARD_LED_GREEN = 0x04,
-    BOARD_LED_ORANGE = 0x0C,
-	BOARD_LED_NONE = 0x00,
+	BOARD_LED_gm = (1<<PB0)|(1<<PB1)|(1<<PB2),
+	BOARD_LED_RED = (1<<PA0),
+	BOARD_LED_GREEN = (1<<PB1),
+    BOARD_LED_ORANGE = (1<<PB2),
+	BOARD_LED_NONE = (1<<PB0)|(1<<PB1)|(1<<PB2),
 } Board_LED_Color_t;
 /*
 typedef enum {
