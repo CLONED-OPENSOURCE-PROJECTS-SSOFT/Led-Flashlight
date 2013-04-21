@@ -17,6 +17,7 @@ inline void initPorts()
 {
 		DDRA|=(1<<PA1);//!SHDN
 		DDRA|=(1<<PA7);//ctrl output
+		PORTA|=(1<<PA7);//ctrl always eneable
 		DDRB|=BOARD_LED_gm;// LEDs
 		LED_setNone();
 
@@ -36,8 +37,9 @@ inline void initPorts()
 		ButtonMinus.Mask=(1<<PA4);
 
 	//start PWM
-		TCCR0A|=(1<<COM0B1);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF
-		TCCR0B|=(1<<CS00);//no prescaler for high frequency
+		TCCR1A|=(1<<COM1B1);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF
+		TCCR1B|=(1<<CS10);//no prescaler for high frequency
+		DDRA|=(1<<PA5);//PWM
 		Brightness_set(0);
 }
 

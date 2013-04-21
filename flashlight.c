@@ -19,7 +19,7 @@ void Brightness_set (uint8_t mode)
 		case 0:
 			pwm = 0;
 			PORTA&=~(1<<PA1);//!SHDN enable the device
-			TCCR0A&=~(1<<WGM00)|(1<<WGM01);//Stop PWM to save power
+			TCCR1A&=~(1<<WGM10)|(1<<WGM11);//Stop PWM to save power
 			break;
 		case 1: pwm = 10; break;
 		case 2: pwm = 15; break;
@@ -31,8 +31,8 @@ void Brightness_set (uint8_t mode)
 	}
 	if (pwm!=0)
 	{
-		OCR0B = pwm;//Set mode
-		TCCR0A|=(1<<WGM00)|(1<<WGM01);//Start PWM Timer
+		OCR1B = pwm;//Set mode
+		TCCR1A|=(1<<WGM10)|(1<<WGM11);//Start PWM Timer
 		PORTA|=(1<<PA1);//!SHDN enable the device and mosfetS
 	}
 }
