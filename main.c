@@ -2,28 +2,35 @@
 #include "main.h"
 #include "Handler.h"
 #include "Leds.h"
+#include "Buttons.h"
 
-Button_struct_t ButtonMinus;
-Button_struct_t ButtonPlus;
 Message msgArray[QUEUE_MAX_LEN];
 LedGroup leds;
 Led red;
 Led green;
 Led blue;
 Led ledArray[3];
+Button_struct_t plusButton;
+Button_struct_t minusButton;
+uint8_t brightness = 0;
+Handler handler;
 
 typedef enum {
-	CHECK_BUTTONS = 1, RUN_SM_TASK = 2, SET_OFF = 3, HEARTBEAT = 4, HEARTBEAT_OFF = 5,
+	CHECK_BUTTONS = 1,
+	SET_OFF = 3,
+	HEARTBEAT = 4,
+	HEARTBEAT_OFF = 5,
+	SETUP = 6,
 } Message_code_t;
 
 ISR(TIM0_COMPA_vect) {
 	tick++;
 }
 
-void initLeds(){
-	Led_init(&red, &PORTB, &DDRB, (1<<PB0), 1);
-	Led_init(&green, &PORTB, &DDRB, (1<<PB1), 1);
-	Led_init(&blue, &PORTB, &DDRB, (1<<PB2), 1);
+void initLeds() {
+	Led_init(&red, &PORTB, &DDRB, (1 << PB0), 1);
+	Led_init(&green, &PORTB, &DDRB, (1 << PB1), 1);
+	Led_init(&blue, &PORTB, &DDRB, (1 << PB2), 1);
 	LedGroup_init(&leds, ledArray);
 	LedGroup_add(&leds, &red);
 	LedGroup_add(&leds, &green);
@@ -68,71 +75,37 @@ void Brightness_set(uint8_t mode) {
 	}
 }
 
-
-void StateMachineTask(Handler *handler) {
-	static uint8_t state = 0;			//initial state
-
-	Click_enum_t MinusClick = FREE, PlusClick = FREE;
-
-	Button_recieveClick(&ButtonMinus, &MinusClick);
-	Button_recieveClick(&ButtonPlus, &PlusClick);
-
-	if (PlusClick == LONGCLICK || MinusClick == LONGCLICK) {
-		LedGroup_set(&leds, RED);
-		Message *message = Handler_obtain(handler, SET_OFF);
-		message->arg1 = BOARD_LED_RED;
-		Handler_sendMessageDelayed(handler, message, 198);
+void onMinusClick() {
+	LedGroup_set(&leds, GREEN);
+	Message *message = Handler_obtain(&handler, SET_OFF);
+	Handler_sendMessageDelayed(&handler, message, 198);
+	if ((brightness > 1) && (brightness <= 6)) {
+		brightness--;
+		Brightness_set(brightness);
 	}
-	if (MinusClick == CLICK || PlusClick == CLICK) {
-		LedGroup_set(&leds, GREEN);
-		Message *message = Handler_obtain(handler, SET_OFF);
-		message->arg1 = BOARD_LED_GREEN;
-		Handler_sendMessageDelayed(handler, message, 198);
-	}
-
-	switch (state) {
-	case 0:
-		if (MinusClick == LONGCLICK) {
-			state = 3;
-		} else if (PlusClick == LONGCLICK) {
-			state = 4;
-		}
-		break;
-	case 1:
-		if ((MinusClick == LONGCLICK) || (PlusClick == LONGCLICK)) {
-			state = 0;
-		}
-		if (PlusClick == CLICK) {
-			state++;
-		}
-		break;
-	case 2:
-	case 3:
-	case 4:
-	case 5:
-		if ((MinusClick == LONGCLICK) || (PlusClick == LONGCLICK)) {
-			state = 0;
-		}
-		if (PlusClick == CLICK) {
-			state++;
-			//TODO Task_create(state--,10000,NOT_FROM_ISR)
-		}
-		if (MinusClick == CLICK) {
-			state--;
-		}
-		break;
-	case 6:			//TURBO
-		if ((MinusClick == LONGCLICK) || (PlusClick == LONGCLICK)) {
-			state = 0;
-		}
-		if (MinusClick == CLICK) {
-			state--;
-		}
-		break;
-	}
-	Brightness_set(state);
 }
 
+void onPlusClick() {
+	LedGroup_set(&leds, GREEN);
+	Message *message = Handler_obtain(&handler, SET_OFF);
+	Handler_sendMessageDelayed(&handler, message, 198);
+	if ((brightness > 0) && (brightness < 6)) {
+		brightness++;
+		Brightness_set(brightness);
+	}
+}
+
+void onLongClick() {
+	LedGroup_set(&leds, RED);
+	Message *message = Handler_obtain(&handler, SET_OFF);
+	Handler_sendMessageDelayed(&handler, message, 198);
+	if (brightness == 0) {
+		brightness = 3;
+	} else {
+		brightness = 0;
+	}
+	Brightness_set(brightness);
+}
 
 inline void configureTickTimer(void) {
 
@@ -149,7 +122,6 @@ inline void configureTickTimer(void) {
 	tick = 0;
 }
 
-
 inline void initPorts() {
 	DDRA |= (1 << PA1);			//!SHDN
 	DDRA |= (1 << PA7);			//ctrl output
@@ -157,32 +129,19 @@ inline void initPorts() {
 
 	DIDR0 &= 0x01;			//voltage adc pin
 
-	PORTA |= (1 << PA4);			//button0 pullup
-	PORTA |= (1 << PA2);			//button1 pullup
-
-	ButtonPlus.Counter = 0;
-	ButtonPlus.CurrentState = FREE;
-	ButtonPlus.Port = &PINA;			//
-	ButtonPlus.Mask = (1 << PA2);
-
-	ButtonMinus.Counter = 0;
-	ButtonMinus.CurrentState = FREE;
-	ButtonMinus.Port = &PINA;
-	ButtonMinus.Mask = (1 << PA4);
-
 	//start PWM
 	TCCR1A |= (1 << COM1B1);//OC0B non-inverting mode OCR0B OCR0B=0xFF goes for continious high, OCR0B=0x00 = OFF
 	TCCR1B |= (1 << CS10);			//no prescaler for high frequency
 	DDRA |= (1 << PA5);			//PWM
 	Brightness_set(0);
+	brightness = 0;
 }
-
 
 void handleMessage(Message msg, void *context, Handler *handler) {
 	switch (msg.what) {
 	case CHECK_BUTTONS:
-		Button_checkButton(&ButtonMinus);
-		Button_checkButton(&ButtonPlus);
+		Button_checkButton(&plusButton);
+		Button_checkButton(&minusButton);
 		Message *buttonMessage = Handler_obtain(handler, CHECK_BUTTONS);
 		Handler_sendMessageDelayed(handler, buttonMessage, BUTTON_CHECK_PERIOD);
 		break;
@@ -199,11 +158,6 @@ void handleMessage(Message msg, void *context, Handler *handler) {
 		Message *messageHBOff = Handler_obtain(handler, HEARTBEAT);
 		Handler_sendMessageDelayed(handler, messageHBOff, 1000);
 		break;
-	case RUN_SM_TASK:
-		StateMachineTask(handler);
-		Message *smMessage = Handler_obtain(handler, RUN_SM_TASK);
-		Handler_sendMessageDelayed(handler, smMessage, 100);
-		break;
 	}
 }
 
@@ -211,14 +165,17 @@ int main(void) {
 	initPorts();
 	configureTickTimer();
 	initLeds();
+
+	Button_init(&plusButton, &PINA, &PORTA, (1 << PA2), onPlusClick, onLongClick);
+	Button_init(&minusButton, &PINA, &PORTA, (1 << PA4), onMinusClick, onLongClick);
+
 	MsgQueue queue;
 	MsgQueue_init(&queue, msgArray, 10);
-	Handler handler;
 	Handler_init(&handler, &queue, handleMessage, 0);
 
 	Handler_sendEmptyMessage(&handler, CHECK_BUTTONS);
-	Handler_sendEmptyMessage(&handler, RUN_SM_TASK);
-	Handler_sendEmptyMessage(&handler, HEARTBEAT);
+	Handler_sendEmptyMessage(&handler, SETUP);
+	//Handler_sendEmptyMessage(&handler, HEARTBEAT);
 
 	/* Enable interrupts */sei();
 	/* Enter the superloop which manages tasks */
@@ -226,38 +183,6 @@ int main(void) {
 		MsgQueue_processNextMessage(&queue);
 	}
 	return 0;	//Should never get here
-}
-
-void Button_recieveClick(Button_struct_t * Button, Click_enum_t * pClick) {
-	*pClick = Button->CurrentState;
-	Button->CurrentState = FREE;
-}
-/**
- * @param pointer to button structure which should be checked
- */
-void Button_checkButton(Button_struct_t * Button) {
-	/* button is released - we should do nothing if it happened after longclick. And if it was a click
-	 * we should report it.	Think of button as a one-element queue. Counter variable represents how long
-	 *  the button is pressed - it is only cleared when the button is released*/
-	if (Button->CurrentState == FREE) {
-		if (((*Button->Port) & Button->Mask) == 0) {  //if button is pressed
-			//if the button is not active at the moment increment counter by one, which is 10 ms
-
-			if (Button->Counter == LONG_CLICK_DURATION) {//long click state is achieved
-				Button->CurrentState = LONGCLICK;
-				Button->Counter = -1;
-			}
-			if (Button->Counter != -1) {
-				Button->Counter++;
-			}
-		} else {
-			//First take a look what do we have in counter
-			if (Button->Counter >= CLICK_DURATION) {
-				Button->CurrentState = CLICK;
-			}
-			Button->Counter = 0;		//if button is released - clear counter
-		}
-	}
 }
 
 /* Define tasks here. */
